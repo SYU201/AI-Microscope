@@ -4,12 +4,6 @@ import os
 from dotenv import load_dotenv
 import time
 
-# 尝试导入 pandas
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
-
 # =========================================
 # 基础配置
 # =========================================
@@ -29,7 +23,7 @@ if 'history' not in st.session_state:
     st.session_state.history = []
 
 # =========================================
-# UI 样式 (保持 V4.1 风格不变)
+# UI 样式 (保持 V4.2 风格)
 # =========================================
 st.markdown("""
 <style>
@@ -47,45 +41,17 @@ st.markdown("""
     background-color: rgba(15, 20, 35, 0.95) !important;
     backdrop-filter: blur(15px);
     border-right: 1px solid rgba(0, 242, 254, 0.2);
-    z-index: 100;
 }
-
-[data-testid="stSidebarNav"] {background-color: transparent !important;}
-button[kind="header"] {
-    color: #00f2fe !important;
-    background: rgba(0,242,254,0.1) !important;
-}
-
-header {background: transparent !important;}
-footer {visibility: hidden;}
 
 .main-title {
     font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
-    font-size: clamp(2rem, 5vw, 3.5rem) !important;
+    font-size: 3.5rem !important;
     font-weight: 900;
     text-align: center;
     background: linear-gradient(90deg, #00f2fe, #4facfe, #a29bfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 10px rgba(0,242,254,0.3));
-    margin-bottom: 0px;
-}
-
-.sub-title {
-    text-align: center;
-    color: rgba(255,255,255,0.6);
-    font-size: 1rem;
-    letter-spacing: 6px;
-    margin-bottom: 30px;
-}
-
-.stTextArea textarea {
-    background: rgba(255, 255, 255, 0.98) !important;
-    color: #0f172a !important;
-    border-radius: 15px !important;
-    padding: 20px !important;
-    font-size: 1.1rem !important;
-    border: 2px solid rgba(0, 242, 254, 0.4) !important;
 }
 
 div.stButton > button {
@@ -96,15 +62,8 @@ div.stButton > button {
     font-size: 1.4rem !important;
     font-weight: 700 !important;
     letter-spacing: 4px !important;
-    border: none !important;
     border-radius: 15px !important;
     white-space: nowrap !important;
-    box-shadow: 0 4px 20px rgba(0, 210, 255, 0.3) !important;
-}
-
-div.stButton > button:hover {
-    box-shadow: 0 8px 30px rgba(0, 210, 255, 0.5) !important;
-    transform: translateY(-1px);
 }
 
 .result-card {
@@ -115,94 +74,71 @@ div.stButton > button:hover {
     margin-top: 20px;
     color: white;
 }
-
-/* 历史记录文本样式 */
-.history-item {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 10px 0;
-}
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================
-# 侧边栏内容 (补全历史记录部分)
+# 侧边栏 (保留历史记录功能)
 # =========================================
 with st.sidebar:
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.image("https://img.icons8.com/fluency/96/microscope.png", width=60)
     st.markdown("### 🔬 实验室控制台")
     
-    # 1. 随机标本按钮
     if st.button("✨ 获取随机标本"):
-        samples = [
-            "现在的年轻人真是越来越懒了，只想着躺平。",
-            "这个产品的设计简直是天才！虽然贵但物有所值。",
-            "专家说多喝热水能治百病，我看那些不听的人身体都不行。"
-        ]
-        st.session_state.random_text = samples[int(time.time()) % 3]
+        samples = ["现在的年轻人真是越来越懒了。", "这个设计简直是天才！"]
+        st.session_state.random_text = samples[int(time.time()) % 2]
 
     st.markdown("---")
-
-    # 2. 核心补全：历史实验记录展示
     st.markdown("📂 **历史实验记录**")
     if st.session_state.history:
-        # 使用 expander 避免侧边栏太长
-        with st.expander("点击展开/记录"):
-            for i, record in enumerate(reversed(st.session_state.history)):
-                # 只显示样本的前 20 个字作为标题
-                st.markdown(f"<div class='history-item'><b>记录 {len(st.session_state.history)-i}:</b><br>{record[:50]}...</div>", unsafe_allow_html=True)
+        with st.expander("点击展开历史记录"):
+            for record in reversed(st.session_state.history):
+                st.markdown(f"内容: {record[:30]}...")
         
-        # 3. 导出按钮
-        history_text = "\n\n".join(st.session_state.history)
-        st.download_button("📥 导出实验存档", history_text, file_name="bias_lab_report.txt")
+        if st.download_button("📥 导出存档", "\n\n".join(st.session_state.history), file_name="lab_report.txt"):
+            st.success("导出成功！")
     else:
-        st.caption("暂无历史记录可供查看")
+        st.caption("暂无实验记录")
 
     st.markdown("---")
-    
-    # 4. 系统信息
     with st.expander("🛠️ 系统信息"):
         st.caption("内核: Gemini 1.5 Flash")
-        st.caption("架构: NoBias V4.2 Stable")
-        st.caption("环境: Streamlit Cloud")
+        st.caption("状态: 运行中")
 
 # =========================================
 # 主界面
 # =========================================
 st.markdown('<div class="main-title">🔍 AI 心理实验室</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">DECONSTRUCTING BIAS</div>', unsafe_allow_html=True)
+st.markdown('<p style="text-align:center; color:gray;">DECONSTRUCTING BIAS</p>', unsafe_allow_html=True)
 
 _, col_m, _ = st.columns([1, 8, 1])
 
 with col_m:
-    # 输入区
     txt = st.session_state.get("random_text", "")
     user_input = st.text_area("", value=txt, placeholder="输入标本...", height=200)
     
-    # 扫描按钮
     if st.button("启 动 深 度 扫 描"):
         if user_input:
             model = genai.GenerativeModel('gemini-1.5-flash')
-            with st.spinner('正在解剖文本...'):
+            # 💡 增加加载提示
+            with st.status("正在启动解剖设备...", expanded=True) as status:
                 try:
-                    response = model.generate_content(f"作为文字解剖专家，深度分析这段话的偏见、意图、逻辑谬误并提供中立改写：{user_input}")
+                    st.write("正在扫描文字分子结构...")
+                    # 💡 注意：这里调用 API
+                    response = model.generate_content(f"深度分析这段话的偏见、意图并改写：{user_input}")
                     res = response.text
                     
-                    # 关键：将记录存入历史
-                    st.session_state.history.append(f"【标本】：{user_input}\n【分析报告】：\n{res}")
+                    # 归档
+                    st.session_state.history.append(f"标本: {user_input}\n分析: {res}")
                     
-                    if pd:
-                        st.markdown("#### 📊 维度扫描仪")
-                        # 模拟图表
-                        st.bar_chart(pd.DataFrame({'维度': ['偏激度', '情绪化', '偏见感'], '分值': [70, 85, 60]}).set_index('维度'))
-                    
+                    status.update(label="扫描完成！", state="complete", expanded=False)
                     st.markdown(f'<div class="result-card">{res}</div>', unsafe_allow_html=True)
-                    st.toast("扫描完成，已自动归档", icon="✅")
+                    st.toast("已自动存入历史记录", icon="✅")
                 except Exception as e:
-                    st.error(f"实验室设备故障: {e}")
+                    status.update(label="设备超时或故障", state="error")
+                    st.error(f"连接 Google 实验室超时，请稍后再试或检查 API 密钥。错误信息: {e}")
         else:
-            st.warning("⚠️ 标本盒为空，请输入内容。")
+            st.warning("请先输入标本。")
 
 st.markdown("<br><center style='color:rgba(255,255,255,0.3)'>“理智，是唯一的显微镜。”</center>", unsafe_allow_html=True)
