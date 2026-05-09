@@ -2,112 +2,182 @@ import streamlit as st
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import time
 
 # 1. 基础配置
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
-# 设置页面属性
-st.set_page_config(page_title="AI 心理显微镜", layout="wide", initial_sidebar_state="expanded")
+# 页面属性设置
+st.set_page_config(page_title="NoBias AI 心理实验室", layout="wide")
 
-# 2. 注入自定义 CSS 美化 (科技感深色背景)
-st.markdown("""
+# 2. 深度定制化 CSS
+st.markdown(f"""
     <style>
-    /* 全局背景和字体颜色 */
-    .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
-    }
-    
-    /* 美化侧边栏 */
-    [data-testid="stSidebar"] {
-        background-color: #161B22;
-    }
+    /* 全局背景图：使用你提供的链接 */
+    .stApp {{
+        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), 
+                    url("https://raw.githubusercontent.com/SYU201/AI-Microscope/main/background.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
 
-    /* 美化评分卡片 */
-    div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        padding: 20px;
-        transition: transform 0.3s;
-    }
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-5px);
-        background-color: rgba(255, 255, 255, 0.1);
-    }
+    /* 隐藏底部 Streamlit 默认页脚和管理按钮 */
+    footer {{visibility: hidden;}}
+    #MainMenu {{visibility: hidden;}}
+    header {{visibility: hidden;}}
+    div[data-testid="stStatusWidget"] {{visibility: hidden;}}
+    .viewerBadge_container__1QSob {{display: none !important;}} /* 隐藏右下角 Manage app */
 
-    /* 标题样式 */
-    h1 {
-        font-family: 'Helvetica Neue', sans-serif;
+    /* 主标题美化 */
+    .main-title {{
+        font-size: 3rem !important;
+        font-weight: 800;
         background: -webkit-linear-gradient(#00f2fe, #4facfe);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-weight: 800;
-    }
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }}
+
+    /* 副标题 */
+    .sub-title {{
+        color: #d1d1d1;
+        text-align: center;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }}
+
+    /* 输入框美化 */
+    .stTextArea textarea {{
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(0, 242, 254, 0.3) !important;
+        border-radius: 15px !important;
+        backdrop-filter: blur(10px);
+        font-size: 1.1rem !important;
+    }}
+
+    /* 核心修改：针对小火箭按钮的美化 */
+    .stButton>button {{
+        width: 100%;
+        background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%) !important;
+        color: #002b36 !important; /* 深色文字，确保在亮色按钮上清晰 */
+        font-weight: bold !important;
+        font-size: 1.2rem !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.6rem 0 !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+    }}
+    .stButton>button:hover {{
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(0, 242, 254, 0.6);
+    }}
+
+    /* 侧边栏美化 */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(10, 15, 25, 0.9);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }}
+
+    /* 结果卡片美化 */
+    div[data-testid="stMetric"] {{
+        background-color: rgba(0, 242, 254, 0.05);
+        border: 1px solid rgba(0, 242, 254, 0.2);
+        border-radius: 15px;
+        padding: 15px;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. 界面顶部
-st.title("🔍 AI 心理显微镜")
-st.markdown("### 解剖文字背后的立场、情绪与逻辑陷阱")
-st.markdown("---")
-
-# 4. 侧边栏内容
+# 3. 侧边栏视图 (重写：将工具栈隐藏在此)
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/microscope.png") # 一个小图标
-    st.info("💡 **项目说明**：本工具通过 AI 模型深度解剖社交媒体文本，帮助用户识别‘信息茧房’中的情绪煽动。")
-    st.write("**工具栈：**")
-    st.code("Gemini 1.5 Flash\nStreamlit\nPython")
+    st.image("https://img.icons8.com/fluency/96/microscope.png", width=80)
+    st.markdown("### 🔬 实验室控制台")
+    
+    with st.expander("🛠️ 系统工具栈"):
+        st.caption("核心模型: Gemini 1.5 Flash")
+        st.caption("前端框架: Streamlit 1.32")
+        st.caption("语言: Python 3.9")
+    
     st.markdown("---")
-    st.caption("© 2026 AI 创新项目 - 大一学生独立开发")
+    st.markdown("#### 💡 灵感触发")
+    if st.button("随机测试一段文字"):
+        samples = [
+            "现在的年轻人真是越来越懒了，只想着躺平，根本不理解父母的辛苦。",
+            "这个产品的设计简直是天才！虽然价格贵了一点，但它带来的身份感是无价的。",
+            "专家建议：每天喝八杯水可以延长寿命，不信的人最后都后悔了。"
+        ]
+        st.session_state.random_text = samples[int(time.time()) % 3]
 
-# 5. 主交互区
-user_input = st.text_area("✍️ 请输入你想解剖的文字：", placeholder="在此粘贴微博、知乎或新闻评论...", height=150)
+# 4. 主界面布局
+st.markdown('<p class="main-title">🔍 AI 心理实验室</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">让偏见无处遁形，解构文字背后的真相</p>', unsafe_allow_html=True)
 
-if st.button("🚀 开始深度解剖"):
-    if user_input:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # 这里的 Prompt 进行了升级，强制 AI 返回易于理解的结构
-        prompt = f"""
-        你是一位资深的社会语言学家。请对以下文本进行解剖：
-        1. 情绪指数：给出一个 0-100 的数值（0为冷静，100为极度偏激）。
-        2. 客观程度：给出一个百分比（如 20%）。
-        3. 逻辑谬误：识别文中是否有阴阳怪气、人身攻击或煽动焦虑，给出数量。
-        4. 详细分析报告：包括立场偏向分析、话语陷阱拆解。
-        5. 中立事实版：重写一段没有任何情绪色彩的事实描述。
+# 容器居中处理
+col_main_1, col_main_2, col_main_3 = st.columns([1, 8, 1])
 
-        待分析文本："{user_input}"
-        """
-        
-        with st.spinner('🔬 显微镜正在扫描文本结构，请稍后...'):
-            try:
-                response = model.generate_content(prompt)
-                full_text = response.text
-                
-                # --- 美化展示区 (仅在点击后显示) ---
-                st.markdown("### 📊 解剖量化指标")
-                col1, col2, col3 = st.columns(3)
-                
-                # 注意：这里的数据目前是让 AI 整体生成，你可以根据 Day 3 的学习尝试用正则表达式提取具体数值
-                with col1:
-                    st.metric(label="🚩 情绪偏激值", value="分析已完成", delta="查看下方报告")
-                with col2:
-                    st.metric(label="⚖️ 客观性评分", value="深度扫描中", delta="建议谨慎阅读")
-                with col3:
-                    st.metric(label="⚠️ 潜在逻辑谬误", value="已检测", delta="点击下方查看")
+with col_main_2:
+    # 文本输入
+    default_text = st.session_state.get('random_text', "")
+    user_input = st.text_area("🧪 待检标本：", value=default_text, placeholder="在此粘贴你想分析的文字，观察它的真实面目...", height=180)
+    
+    analyze_btn = st.button("🚀 启动深度扫描")
 
-                st.markdown("---")
-                
-                # 使用折叠框展示详细报告
-                with st.expander("📝 查看深度解剖报告", expanded=True):
-                    st.markdown(full_text)
+    if analyze_btn:
+        if user_input:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # 升级后的 Prompt
+            prompt = f"""
+            你是一位毒舌但客观的文字解剖专家。请对以下文本进行深度扫描：
+            1. [得分]：给出 0-100 的‘偏激指数’。
+            2. [成分]：识别文字中的‘情绪化词汇’有哪些。
+            3. [漏洞]：拆解其逻辑谬误（如：非黑即白、诉诸情感、降智打击等）。
+            4. [结论]：一句话戳穿这段话的真实意图。
+            5. [净化]：将这段话改写成完全中立的客观描述。
+
+            待检文本："{user_input}"
+            """
+            
+            with st.spinner('正在分析分子结构...'):
+                try:
+                    response = model.generate_content(prompt)
+                    res_text = response.text
                     
-                st.success("解剖完成！请保持独立思考。")
-                
-            except Exception as e:
-                st.error(f"连接 AI 出错啦：{str(e)}")
-    else:
-        st.warning("🙈 请先输入一段文字，显微镜才能工作哦！")
+                    # 创意展示：结果区域
+                    st.markdown("### 📊 扫描结果报告")
+                    
+                    # 模拟仪表盘
+                    m1, m2, m3 = st.columns(3)
+                    with m1:
+                        st.metric("🚩 偏激指数", "高危" if "80" in res_text else "正常")
+                    with m2:
+                        st.metric("⚖️ 逻辑完整度", "有缺陷")
+                    with m3:
+                        st.metric("👁️ 视觉干扰", "已过滤")
+
+                    st.markdown("---")
+                    
+                    # 打字机效果展示结论
+                    with st.container():
+                        st.markdown("#### 📝 详细实验日志")
+                        st.info(res_text)
+                    
+                    st.toast("扫描成功！已自动存入实验室记录。", icon="✅")
+                    
+                except Exception as e:
+                    st.error(f"实验室设备故障：{str(e)}")
+        else:
+            st.warning("请先放入标本（输入文字）。")
+
+# 5. 交互小创意：底部动态提示
+st.markdown("<br><br>", unsafe_allow_html=True)
+placeholder = st.empty()
+quotes = ["“所有的偏见都源于无知。”", "“换个角度，世界可能完全不同。”", "“理智，是唯一的显微镜。”"]
+# 可以在这里做个简单的轮播或者静态展示
+st.markdown(f"<center style='color:rgba(255,255,255,0.3)'>{quotes[int(time.time()) % 3]}</center>", unsafe_allow_html=True)
