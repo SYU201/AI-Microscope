@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # =========================================
-# 终极 UI 修复与艺术化 CSS
+# UI 修复与艺术化 CSS
 # =========================================
 st.markdown("""
 <style>
@@ -43,7 +43,7 @@ button[kind="header"] {
     border-radius: 50% !important;
 }
 svg {
-    fill: white !important; /* 强制图标变白 */
+    fill: white !important;
 }
 
 /* 侧边栏本身美化 */
@@ -59,7 +59,7 @@ footer {visibility: hidden;}
 header {background: transparent !important;}
 .viewerBadge_container__1QSob {display: none !important;}
 
-/* 主标题：更强烈的科技感 */
+/* 主标题 */
 .main-title {
     font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
     font-size: 3.8rem !important;
@@ -81,7 +81,7 @@ header {background: transparent !important;}
     opacity: 0.8;
 }
 
-/* 输入框：磨砂感标本箱 */
+/* 输入框 */
 .stTextArea textarea {
     background: rgba(255, 255, 255, 0.95) !important;
     color: #111111 !important;
@@ -92,29 +92,27 @@ header {background: transparent !important;}
     box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
 }
 
-/* ⭐⭐⭐ 启动按钮：艺术字 + 极光渐变样式 ⭐⭐⭐ */
+/* ⭐⭐⭐ 启动按钮：缩小字间距 + 单元格修饰 ⭐⭐⭐ */
 div.stButton > button {
     width: 100% !important;
     height: 4.5rem !important;
-    background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%) !important; /* 极光蓝渐变 */
-    color: #ffffff !important; /* 纯白艺术字 */
+    background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%) !important;
+    color: #ffffff !important;
     font-family: 'Noto Sans SC', sans-serif !important;
     font-size: 1.6rem !important;
     font-weight: 900 !important;
-    text-transform: uppercase;
-    letter-spacing: 10px !important; /* 极宽间距，非常有艺术感 */
+    letter-spacing: 2px !important; /* 缩小字间距，不再显得松散 */
     border: none !important;
     border-radius: 20px !important;
     box-shadow: 0 0 25px rgba(0, 210, 255, 0.6) !important;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     margin-top: 20px !important;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* 文字立体感 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 div.stButton > button:hover {
     transform: translateY(-3px) !important;
     box-shadow: 0 15px 40px rgba(0, 210, 255, 0.8) !important;
-    background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%) !important;
 }
 
 /* 结果卡片 */
@@ -136,7 +134,7 @@ div[data-testid="stMetric"] {
 """, unsafe_allow_html=True)
 
 # =========================================
-# 侧边栏恢复
+# 侧边栏
 # =========================================
 with st.sidebar:
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -167,13 +165,14 @@ col1, col2, col3 = st.columns([1, 7, 1])
 with col2:
     default_text = st.session_state.get("random_text", "")
     user_input = st.text_area(
-        "", # 标签留空，更简洁
+        "", 
         value=default_text,
         placeholder="在此放入你想解剖的文字标本...",
         height=220
     )
     
-    if st.button("启动深度扫描"):
+    # 修改按钮显示内容，增加单元格括号 [ ]
+    if st.button(" [ 启 动 深 度 扫 描 ] "):
         if user_input:
             model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"你是一位毒舌但客观的文字解剖专家。请对文本进行深度扫描，包含偏激指数(0-100)、情绪化词汇识别、逻辑谬误拆解、一句话穿真实意图、中立版本改写。文本：{user_input}"
