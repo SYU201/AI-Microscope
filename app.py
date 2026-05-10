@@ -5,11 +5,11 @@ import os
 import time
 
 # =========================================
-# 1. 核心 API 初始化
+# 1. 核心 API 初始化 (已根据你的报错精准修改)
 # =========================================
-# 尝试从 Secrets 获取密钥
-gemini_key = st.secrets.get("GOOGLE_API_KEY", "").strip()
-kimi_key = st.secrets.get("KIMI_API_KEY", "").strip()
+# 尝试从 Secrets 获取密钥并强制清理空格/换行
+gemini_key = st.secrets.get("GOOGLE_API_KEY", "").strip().replace('"', '').replace("'", "")
+kimi_key = st.secrets.get("KIMI_API_KEY", "").strip().replace('"', '').replace("'", "")
 
 # 配置 Gemini
 if gemini_key:
@@ -105,7 +105,7 @@ with st.sidebar:
     
     selected_model = st.selectbox(
         "选择分析引擎",
-        ["Gemini 1.5 Flash", "Kimi (备用)"],
+        ["Gemini 1.5 Flash (免费版)", "Kimi (备用)"],
         index=0
     )
     
@@ -152,12 +152,20 @@ with col_m:
                         if not gemini_key:
                             st.error("未检测到 Gemini 密钥，请检查 Secrets 配置。")
                         else:
-                            model = genai.GenerativeModel('gemini-1.5-flash')
-                            # 流式输出
-                            response = model.generate_content(prompt, stream=True)
-                            for chunk in response:
-                                full_res += chunk.text
-                                report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
+                            # 尝试使用最新版名称解决 404 问题
+                            try:
+                                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                                response = model.generate_content(prompt, stream=True)
+                                for chunk in response:
+                                    full_res += chunk.text
+                                    report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
+                            except:
+                                # 备选方案：如果 flash 失败，尝试 Pro 版本
+                                model = genai.GenerativeModel('gemini-pro')
+                                response = model.generate_content(prompt, stream=True)
+                                for chunk in response:
+                                    full_res += chunk.text
+                                    report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
                     else:
                         if not kimi_client:
                             st.error("未检测到 Kimi 密钥，请检查 Secrets 配置。")
@@ -174,7 +182,6 @@ with col_m:
 
                     if full_res:
                         st.session_state.history.append(f"标本: {user_input}\n分析: {full_res}")
-                        # 维度可视化
                         chart_data = {'维度': ['偏激度', '情绪化', '偏见感', '逻辑性'], '分值': [70, 85, 60, 45]}
                         st.bar_chart(data=chart_data, x='维度', y='分值')
                         status.update(label="扫描完成！", state="complete", expanded=False)
@@ -182,7 +189,7 @@ with col_m:
 
                 except Exception as e:
                     status.update(label="设备故障", state="error")
-                    st.error(f"分析失败。请确保 Secrets 中的 Key 填写正确且无空格。错误提示: {str(e)}")
+                    st.error(f"分析失败。错误提示: {str(e)}")
         else:
             st.warning("⚠️ 实验舱为空，请输入文字。")
 
