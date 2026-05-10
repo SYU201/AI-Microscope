@@ -5,9 +5,9 @@ import os
 import time
 
 # =========================================
-# 1. 核心 API 初始化 (已根据你的报错精准修改)
+# 1. 核心 API 初始化（增加强制清洗逻辑）
 # =========================================
-# 尝试从 Secrets 获取密钥并强制清理空格/换行
+# 尝试从 Secrets 获取密钥并剔除可能残留的引号或空格
 gemini_key = st.secrets.get("GOOGLE_API_KEY", "").strip().replace('"', '').replace("'", "")
 kimi_key = st.secrets.get("KIMI_API_KEY", "").strip().replace('"', '').replace("'", "")
 
@@ -37,7 +37,7 @@ if 'random_text' not in st.session_state:
     st.session_state.random_text = ""
 
 # =========================================
-# 2. UI 视觉样式（完整保留不省略）
+# 2. UI 视觉样式（严格保留，未做任何改动）
 # =========================================
 st.markdown("""
 <style>
@@ -105,7 +105,7 @@ with st.sidebar:
     
     selected_model = st.selectbox(
         "选择分析引擎",
-        ["Gemini 1.5 Flash (免费版)", "Kimi (备用)"],
+        ["Gemini 1.5 Flash", "Kimi (备用)"],
         index=0
     )
     
@@ -129,7 +129,7 @@ with st.sidebar:
         st.caption("暂无实验记录")
 
 # =========================================
-# 4. 主界面：扫描逻辑
+# 4. 主界面：扫描逻辑（精准修复 Gemini 404）
 # =========================================
 st.markdown('<div class="main-title">🔍 AI 心理实验室</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">DECONSTRUCTING BIAS · 解构偏见</div>', unsafe_allow_html=True)
@@ -150,25 +150,31 @@ with col_m:
                 try:
                     if "Gemini" in selected_model:
                         if not gemini_key:
-                            st.error("未检测到 Gemini 密钥，请检查 Secrets 配置。")
+                            st.error("未检测到 Gemini 密钥")
                         else:
-                            # 尝试使用最新版名称解决 404 问题
-                            try:
-                                model = genai.GenerativeModel('gemini-1.5-flash-latest')
-                                response = model.generate_content(prompt, stream=True)
-                                for chunk in response:
-                                    full_res += chunk.text
-                                    report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
-                            except:
-                                # 备选方案：如果 flash 失败，尝试 Pro 版本
-                                model = genai.GenerativeModel('gemini-pro')
-                                response = model.generate_content(prompt, stream=True)
-                                for chunk in response:
-                                    full_res += chunk.text
-                                    report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
-                    else:
+                            # 核心修复：三重路径尝试逻辑
+                            success = False
+                            # 依次尝试：完整路径、新简称、经典简称
+                            for m_name in ['models/gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']:
+                                try:
+                                    model = genai.GenerativeModel(m_name)
+                                    response = model.generate_content(prompt, stream=True)
+                                    # 尝试读取流式数据
+                                    for chunk in response:
+                                        if chunk.text:
+                                            full_res += chunk.text
+                                            report_placeholder.markdown(f'<div class="result-card">{full_res}</div>', unsafe_allow_html=True)
+                                    success = True
+                                    break # 只要有一个模型通了，就退出循环
+                                except Exception:
+                                    continue # 这个名字不行，试下一个
+                            
+                            if not success:
+                                raise Exception("无法连接到 Gemini 任何版本，请检查 Key 是否有效。")
+                    
+                    else: # Kimi 逻辑
                         if not kimi_client:
-                            st.error("未检测到 Kimi 密钥，请检查 Secrets 配置。")
+                            st.error("未检测到 Kimi 密钥")
                         else:
                             completion = kimi_client.chat.completions.create(
                                 model="moonshot-v1-8k",
